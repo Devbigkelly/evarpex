@@ -479,3 +479,93 @@ $topbar_banner_small = uploaded_asset(get_setting('topbar_banner_small')) ?? $to
         </nav>
     </div>
 </header>
+
+
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const input = document.getElementById('desktopSearchInput');
+    const suggestionsBox = document.getElementById('searchSuggestions');
+    let debounceTimer;
+
+    if (!input || !suggestionsBox) return;
+
+    input.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+
+        const query = this.value.trim();
+
+        // Hide suggestions if query is too short
+        if (query.length < 2) {
+            suggestionsBox.innerHTML = '';
+            suggestionsBox.classList.add('d-none');
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            fetchSuggestions(query);
+        }, 350); // 350ms debounce – feels responsive but avoids too many requests
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) {
+            suggestionsBox.classList.add('d-none');
+        }
+    });
+
+    async function fetchSuggestions(query) {
+        try {
+            const response = await fetch(`/search/suggestions?q=${encodeURIComponent(query)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Network error');
+
+            const data = await response.json();
+
+            renderSuggestions(data.products || []);
+
+        } catch (err) {
+            console.error('Search suggestions failed:', err);
+            suggestionsBox.innerHTML = '<div class="p-3 text-muted">Something went wrong...</div>';
+            suggestionsBox.classList.remove('d-none');
+        }
+    }
+
+    function renderSuggestions(products) {
+        if (products.length === 0) {
+            suggestionsBox.innerHTML = '<div class="p-3 text-muted">No products found</div>';
+            suggestionsBox.classList.remove('d-none');
+            return;
+        }
+
+        let html = '';
+
+        products.forEach(product => {
+            const price = product.unit_price_formatted || '₦' + product.unit_price;
+            const thumb = product.thumbnail || '{{ static_asset('img/placeholder.jpg') }}';
+
+            html += `
+                <a href="${product.url}" class="d-flex align-items-center p-2 text-dark text-decoration-none hover-bg-light">
+                    <img src="${thumb}" alt="${product.name}" class="me-3 rounded" width="48" height="48" style="object-fit: cover;">
+                    <div class="flex-grow-1">
+                        <div class="fw-medium text-truncate">${product.name}</div>
+                        <div class="text-primary small">${price}</div>
+                    </div>
+                </a>
+            `;
+        });
+
+        suggestionsBox.innerHTML = html;
+        suggestionsBox.classList.remove('d-none');
+    }
+
+});
+</script>
