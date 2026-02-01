@@ -101,8 +101,10 @@ class ProductController extends Controller
 
         //Product Stock
         $this->productStockService->store($request->only([
-            'colors_active', 'colors', 'choice_no', 'unit_price', 'sku', 'current_stock', 'product_id'
+            'colors_active', 'choice_no', 'unit_price', 'sku', 'current_stock', 'product_id'
         ]), $product);
+        $data['colors'] = $request->input('colors', []); 
+
 
         // Frequently Bought Products
         $this->frequentlyBoughtProductService->store($request->only([

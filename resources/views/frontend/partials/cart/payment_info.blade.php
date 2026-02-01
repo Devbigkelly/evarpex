@@ -151,7 +151,7 @@
                     {{ translate('Insufficient balance') }}
                 </button>
             @else
-                <button type="button" onclick="use_wallet()"
+                <button type="submit"
                     class="btn btn-primary fs-14 fw-700 px-5 rounded-0">
                     {{ translate('Pay with wallet') }}
                 </button>

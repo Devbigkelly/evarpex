@@ -25,9 +25,9 @@ $topbar_banner_small = uploaded_asset(get_setting('topbar_banner_small')) ?? $to
             }
           }">
             <div class="swiper-wrapper min-w-0">
-              <div class="swiper-slide text-truncate text-center">🎉 Free Shipping on orders over ₦500,000. <span class="d-none d-sm-inline">Don't miss a discount!</span></div>
-              <div class="swiper-slide text-truncate text-center">💰 Money back guarantee. <span class="d-none d-sm-inline">We return money within 30 days.</span></div>
-              <div class="swiper-slide text-truncate text-center">💪 Friendly 24/7 customer support. <span class="d-none d-sm-inline">We've got you covered!</span></div>
+              <div class="swiper-slide text-truncate text-center">ðŸŽ‰ Free Shipping on orders over â‚¦500,000. <span class="d-none d-sm-inline">Don't miss a discount!</span></div>
+              <div class="swiper-slide text-truncate text-center">ðŸ’° Money back guarantee. <span class="d-none d-sm-inline">We return money within 30 days.</span></div>
+              <div class="swiper-slide text-truncate text-center">ðŸ’ª Friendly 24/7 customer support. <span class="d-none d-sm-inline">We've got you covered!</span></div>
             </div>
           </div>
           <div class="nav ms-2">
@@ -54,7 +54,7 @@ $topbar_banner_small = uploaded_asset(get_setting('topbar_banner_small')) ?? $to
 
                 <!-- Navbar brand (Logo) -->
                 <a href="{{ route('home')}}" class="navbar-brand py-1 py-md-2 py-xl-1" wire:navigate>
-                    <span class="d-sm-flex flex-shrink-0 text-primary me-2">
+                    <span class="d-none d-sm-flex flex-shrink-0 text-primary me-2">
                         @php
                         $header_logo = get_setting('header_logo');
                         @endphp
@@ -70,17 +70,19 @@ $topbar_banner_small = uploaded_asset(get_setting('topbar_banner_small')) ?? $to
             <div class="col col-lg-9 d-flex align-items-center justify-content-end">
                 <!-- Search visible on screens > 991px wide (lg breakpoint) -->
                 <div class="position-relative w-100 d-none d-md-block mx-3 mx-lg-4">
-                    <form action="{{ route('search') }}" method="GET">
-                        <i class="ci-search position-absolute top-50 start-0 translate-middle-y ms-3"></i>
-                
+                    <form action="{{ route('search') }}" method="GET" class="d-flex">
                         <input
                             type="search"
                             name="q"
-                            class="form-control form-icon-start"
+                            class="form-control"
                             placeholder="Search products and stores"
                             aria-label="Search"
                             required
                         >
+                
+                        <button type="submit" class="btn btn-primary ms-2">
+                            Search
+                        </button>
                     </form>
                 </div>
                 
@@ -154,15 +156,7 @@ $topbar_banner_small = uploaded_asset(get_setting('topbar_banner_small')) ?? $to
                  Compare
                 </a>
               </li>
-              <li>
-                 @php
-                        $conversation = get_non_viewed_conversations();
-                    @endphp
-                <a class="dropdown-item" href="{{ route('conversations.index') }}" wire:navigate>
-                  <i class="ci-message-square fs-base opacity-75 me-2"></i>
-                  Messages  @if (count($conversation) > 0)({{ count($conversation) }})@endif
-                </a>
-              </li>
+             
               <li>
                 <a class="dropdown-item" href="{{ route('wallet.index') }}" wire:navigate>
                   <i class="ci-dollar-sign fs-base opacity-75 me-2"></i>
@@ -274,19 +268,31 @@ $topbar_banner_small = uploaded_asset(get_setting('topbar_banner_small')) ?? $to
 
     <!-- Search visible on screens < 992px wide (lg breakpoint). It is hidden inside collapse by default -->
     <div class="collapse position-absolute top-100 z-2 w-100 bg-lighr d-lg-none me-2" id="searchBar">
-        <div class="container my-3">
-            <form action="{{ route('search') }}" method="GET" class="position-relative" data-bs-theme="light">
-                <i class="ci-search position-absolute top-50 translate-middle-y d-flex fs-lg text-white ms-3"></i>
+        <div class="container position-relative my-3" data-bs-theme="light">
+            <form action="{{ route('search') }}" method="GET" class="position-relative">
+                
+                <!-- Left icon -->
+                <i class="ci-search position-absolute top-50 start-0 translate-middle-y ms-3 fs-lg text-muted z-2"></i>
         
                 <input
                     type="search"
                     name="q"
-                    class="form-control form-icon-start border-white rounded-pill"
+                    class="form-control form-icon-start border rounded-pill pe-5"
                     placeholder="Search the products"
                     required
+                />
+        
+                <!-- Right submit button -->
+                <button
+                    type="submit"
+                    class="position-absolute top-50 end-0 translate-middle-y me-3 border-0 bg-transparent z-2"
                 >
+                    Search
+                </button>
+        
             </form>
         </div>
+        
         
     </div>
 
@@ -479,93 +485,3 @@ $topbar_banner_small = uploaded_asset(get_setting('topbar_banner_small')) ?? $to
         </nav>
     </div>
 </header>
-
-
-
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    const input = document.getElementById('desktopSearchInput');
-    const suggestionsBox = document.getElementById('searchSuggestions');
-    let debounceTimer;
-
-    if (!input || !suggestionsBox) return;
-
-    input.addEventListener('input', function () {
-        clearTimeout(debounceTimer);
-
-        const query = this.value.trim();
-
-        // Hide suggestions if query is too short
-        if (query.length < 2) {
-            suggestionsBox.innerHTML = '';
-            suggestionsBox.classList.add('d-none');
-            return;
-        }
-
-        debounceTimer = setTimeout(() => {
-            fetchSuggestions(query);
-        }, 350); // 350ms debounce – feels responsive but avoids too many requests
-    });
-
-    // Hide suggestions when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) {
-            suggestionsBox.classList.add('d-none');
-        }
-    });
-
-    async function fetchSuggestions(query) {
-        try {
-            const response = await fetch(`/search/suggestions?q=${encodeURIComponent(query)}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) throw new Error('Network error');
-
-            const data = await response.json();
-
-            renderSuggestions(data.products || []);
-
-        } catch (err) {
-            console.error('Search suggestions failed:', err);
-            suggestionsBox.innerHTML = '<div class="p-3 text-muted">Something went wrong...</div>';
-            suggestionsBox.classList.remove('d-none');
-        }
-    }
-
-    function renderSuggestions(products) {
-        if (products.length === 0) {
-            suggestionsBox.innerHTML = '<div class="p-3 text-muted">No products found</div>';
-            suggestionsBox.classList.remove('d-none');
-            return;
-        }
-
-        let html = '';
-
-        products.forEach(product => {
-            const price = product.unit_price_formatted || '₦' + product.unit_price;
-            const thumb = product.thumbnail || '{{ static_asset('img/placeholder.jpg') }}';
-
-            html += `
-                <a href="${product.url}" class="d-flex align-items-center p-2 text-dark text-decoration-none hover-bg-light">
-                    <img src="${thumb}" alt="${product.name}" class="me-3 rounded" width="48" height="48" style="object-fit: cover;">
-                    <div class="flex-grow-1">
-                        <div class="fw-medium text-truncate">${product.name}</div>
-                        <div class="text-primary small">${price}</div>
-                    </div>
-                </a>
-            `;
-        });
-
-        suggestionsBox.innerHTML = html;
-        suggestionsBox.classList.remove('d-none');
-    }
-
-});
-</script>

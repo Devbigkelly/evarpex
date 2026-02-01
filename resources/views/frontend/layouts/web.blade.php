@@ -15,7 +15,6 @@
     <link rel="stylesheet" href="{{ asset('asset/css/theme.min.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
-    @livewireStyles
 </head>
 
 <body>
@@ -233,10 +232,50 @@ function addToCart() {
     @endif
 }
 
+$('#search').on('keyup focus', function () {
+    liveSearch();
+});
+
+$(document).on('click', function (e) {
+    if (!$(e.target).closest('.container').length) {
+        $('.typed-search-box').addClass('d-none');
+    }
+});
+
+function liveSearch() {
+    let searchKey = $('#search').val().trim();
+
+    if (searchKey.length < 2) {
+        $('.typed-search-box').addClass('d-none');
+        return;
+    }
+
+    $('.typed-search-box').removeClass('d-none');
+    $('.search-preloader').removeClass('d-none');
+
+    $.post('{{ route('search.ajax') }}', {
+        _token: '{{ csrf_token() }}',
+        search: searchKey
+    }, function (res) {
+
+        $('.search-preloader').addClass('d-none');
+
+        if (res.status === 'empty') {
+            $('#search-content').html('');
+            $('.search-nothing')
+                .removeClass('d-none')
+                .html(`Sorry, nothing found for <strong>"${searchKey}"</strong>`);
+        } else {
+            $('.search-nothing').addClass('d-none');
+            $('#search-content').html(res.html);
+        }
+    });
+}
+
+
 
 </script>
 
 
-@livewireScripts
 </body>
 </html>

@@ -5,7 +5,7 @@
         <div class="row gx-4">
             <!-- Checkout Form -->
             <div class="col-lg-8 mx-auto">
-                <form id="checkout-form" class="form-default" action="{{ route('payment.checkout') }}" method="POST" data-toggle="validator">
+                <form class="form-default" action="{{ route('payment.checkout') }}" method="POST" data-toggle="validator">
                     @csrf
 
                     <div class="accordion" id="checkoutAccordion">
@@ -64,7 +64,7 @@
                                         <a href="{{ route('home') }}" class="btn btn-link px-0">
                                             <i class="las la-arrow-left"></i> {{ translate('Return to shop') }}
                                         </a>
-                                        <button type="button" id="submitOrderBtn" onclick="submitOrder(this)" class="btn btn-primary">
+                                        <button type="submit" class="btn btn-primary">
                                             {{ translate('Complete Order') }}
                                         </button>
                                     </div>
@@ -77,7 +77,7 @@
             </div>
 
             <!-- Cart Summary -->
-                @include('frontend.components.cart_summary', ['proceed' => 0, 'carts' => $carts])
+                {{-- @include('frontend.components.cart_summary', ['proceed' => 0, 'carts' => $carts]) --}}
             
         </div>
 </section>
