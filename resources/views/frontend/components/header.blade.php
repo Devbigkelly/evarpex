@@ -69,22 +69,23 @@ $topbar_banner_small = uploaded_asset(get_setting('topbar_banner_small')) ?? $to
             </div>
             <div class="col col-lg-9 d-flex align-items-center justify-content-end">
                 <!-- Search visible on screens > 991px wide (lg breakpoint) -->
-                <div class="position-relative w-100 d-none d-md-block mx-3 mx-lg-4">
-                    <form action="{{ route('search') }}" method="GET" class="d-flex">
-                        <input
-                            type="search"
-                            name="q"
-                            class="form-control"
-                            placeholder="Search products and stores"
-                            aria-label="Search"
-                            required
-                        >
+
+<div class="position-relative w-100">
+    <input
+        type="search"
+        id="searchInput"
+        class="form-control"
+        placeholder="Search products and stores"
+        autocomplete="off"
+    >
+
+    <div id="searchDropdown"
+         class="position-absolute w-100 bg-white border d-none"
+         style="z-index:1000; max-height:400px; overflow-y:auto;">
+    </div>
+</div>
+
                 
-                        <button type="submit" class="btn btn-primary ms-2">
-                            Search
-                        </button>
-                    </form>
-                </div>
                 
 
 

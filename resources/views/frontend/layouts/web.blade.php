@@ -276,6 +276,94 @@ function liveSearch() {
 
 </script>
 
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const searchDropdown = document.getElementById('searchDropdown');
+    const ajaxSearchUrl = "{{ route('search.ajax') }}";
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    
+    let debounce = null;
+    
+    searchInput.addEventListener('input', function () {
+        const query = this.value.trim();
+    
+        if (!query) {
+            searchDropdown.classList.add('d-none');
+            searchDropdown.innerHTML = '';
+            return;
+        }
+    
+        clearTimeout(debounce);
+        debounce = setTimeout(() => {
+            fetch(ajaxSearchUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ search: query })
+            })
+            .then(res => res.json())
+            .then(data => renderDropdown(data))
+            .catch(err => console.error(err));
+        }, 300);
+    });
+    
+    function renderDropdown(data) {
+        let html = '';
+    
+        if (data.products.length) {
+            html += `<div class="fw-bold px-2 pt-2">Products</div>`;
+            data.products.forEach(p => {
+                html += `<div class="px-2 py-1 search-item" data-url="${p.url}">${p.name}</div>`;
+            });
+        }
+    
+        if (data.shops.length) {
+            html += `<div class="fw-bold px-2 pt-2">Stores</div>`;
+            data.shops.forEach(s => {
+                html += `<div class="px-2 py-1 search-item" data-url="${s.url}">${s.name}</div>`;
+            });
+        }
+    
+        if (data.categories.length) {
+            html += `<div class="fw-bold px-2 pt-2">Categories</div>`;
+            data.categories.forEach(c => {
+                html += `<div class="px-2 py-1 search-item" data-url="${c.url}">${c.name}</div>`;
+            });
+        }
+    
+        if (data.preorder_products.length) {
+            html += `<div class="fw-bold px-2 pt-2">Preorder Products</div>`;
+            data.preorder_products.forEach(p => {
+                html += `<div class="px-2 py-1 search-item" data-url="${p.url}">${p.name}</div>`;
+            });
+        }
+    
+        if (!html) {
+            html = `<div class="p-2 text-muted">No results found</div>`;
+        }
+    
+        searchDropdown.innerHTML = html;
+        searchDropdown.classList.remove('d-none');
+    
+        document.querySelectorAll('.search-item').forEach(item => {
+            item.addEventListener('click', () => {
+                window.location.href = item.dataset.url;
+            });
+        });
+    }
+    
+    // close dropdown on outside click
+    document.addEventListener('click', e => {
+        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+            searchDropdown.classList.add('d-none');
+        }
+    });
+    </script>
+    
+    
+
 
 </body>
 </html>

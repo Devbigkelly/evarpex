@@ -241,77 +241,79 @@ class SearchController extends Controller
 
     //Suggestional Search
     public function ajax_search(Request $request)
-    {
-        $keywords = array();
-        $query = $request->search;
-        $preorder_products = null;
-        $products = Product::where('published', 1)->where('tags', 'like', '%' . $query . '%')->get();
-        foreach ($products as $key => $product) {
-            foreach (explode(',', $product->tags) as $key => $tag) {
-                if (stripos($tag, $query) !== false) {
-                    if (sizeof($keywords) > 5) {
-                        break;
-                    } else {
-                        if (!in_array(strtolower($tag), $keywords)) {
-                            array_push($keywords, strtolower($tag));
-                        }
-                    }
-                }
-            }
-        }
+{
+    $query = $request->input('search');
 
-        $products_query = filter_products(Product::query());
-
-        $products_query = $products_query->where('published', 1)
-            ->where(function ($q) use ($query) {
-                foreach (explode(' ', trim($query)) as $word) {
-                    $q->where('name', 'like', '%' . $word . '%')
-                        ->orWhere('tags', 'like', '%' . $word . '%')
-                        ->orWhereHas('product_translations', function ($q) use ($word) {
-                            $q->where('name', 'like', '%' . $word . '%');
-                        })
-                        ->orWhereHas('stocks', function ($q) use ($word) {
-                            $q->where('sku', 'like', '%' . $word . '%');
-                        });
-                }
-            });
-        $case1 = $query . '%';
-        $case2 = '%' . $query . '%';
-
-        $products_query->orderByRaw('CASE
-                WHEN name LIKE "'.$case1.'" THEN 1
-                WHEN name LIKE "'.$case2.'" THEN 2
-                ELSE 3
-                END');
-        $products = $products_query->limit(3)->get();
-
-        $categories = Category::where('name', 'like', '%' . $query . '%')->get()->take(3);
-
-        $shops = Shop::whereIn('user_id', verified_sellers_id())->where('name', 'like', '%' . $query . '%')->get()->take(3);
-
-        if(addon_is_activated('preorder')){
-            $preorder_products =  PreorderProduct::where('is_published', 1)
-            ->where(function ($queryBuilder) use ($query) {
-                $queryBuilder->where('product_name', 'like', '%' . $query . '%')
-                    ->orWhere('tags', 'like', '%' . $query . '%');
-            })
-            ->where(function ($query) {
-                $query->whereHas('user', function ($q) {
-                    $q->where('user_type', 'admin');
-                })->orWhereHas('user.shop', function ($q) {
-                    $q->where('verification_status', 1);
-                });
-            })
-            ->limit(3)
-            ->get();
-            
-        }
-
-        if (sizeof($keywords) > 0 || sizeof($categories) > 0 || sizeof($products) > 0 || sizeof($shops) > 0  || sizeof($preorder_products) > 0){
-            return view('frontend.partials.search_content', compact('products', 'categories', 'keywords', 'shops','preorder_products'));
-        }
-        return '0';
+    if (!$query) {
+        return response()->json([
+            'products' => [],
+            'categories' => [],
+            'shops' => [],
+            'preorder_products' => []
+        ]);
     }
+
+    // PRODUCTS
+    $products = Product::where('published', 1)
+        ->where(function ($q) use ($query) {
+            $q->where('name', 'like', "%{$query}%")
+              ->orWhere('tags', 'like', "%{$query}%");
+        })
+        ->limit(5)
+        ->get()
+        ->map(function ($product) {
+            return [
+                'name' => $product->name,
+                'url'  => route('product', $product->slug),
+            ];
+        });
+
+    // CATEGORIES
+    $categories = Category::where('name', 'like', "%{$query}%")
+        ->limit(3)
+        ->get()
+        ->map(function ($category) {
+            return [
+                'name' => $category->name,
+                'url'  => route('category', $category->slug),
+            ];
+        });
+
+    // STORES / SHOPS
+    $shops = Shop::whereIn('user_id', verified_sellers_id())
+        ->where('name', 'like', "%{$query}%")
+        ->limit(3)
+        ->get()
+        ->map(function ($shop) {
+            return [
+                'name' => $shop->name,
+                'url'  => route('shop.visit', $shop->slug),
+            ];
+        });
+
+    // PREORDER PRODUCTS (optional)
+    $preorder_products = [];
+    if (addon_is_activated('preorder')) {
+        $preorder_products = PreorderProduct::where('is_published', 1)
+            ->where('product_name', 'like', "%{$query}%")
+            ->limit(3)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'name' => $p->product_name,
+                    'url'  => route('preorder.product', $p->slug),
+                ];
+            });
+    }
+
+    return response()->json([
+        'products' => $products,
+        'categories' => $categories,
+        'shops' => $shops,
+        'preorder_products' => $preorder_products,
+    ]);
+}
+
 
     /**
      * Store a newly created resource in storage.
