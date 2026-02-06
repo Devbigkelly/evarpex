@@ -70,7 +70,7 @@ $topbar_banner_small = uploaded_asset(get_setting('topbar_banner_small')) ?? $to
             <div class="col col-lg-9 d-flex align-items-center justify-content-end">
                 <!-- Search visible on screens > 991px wide (lg breakpoint) -->
 
-<div class="position-relative w-100">
+<div class="position-relative w-100 d-none d-md-block mx-3 mx-lg-4">
     <input
         type="search"
         id="searchInput"
@@ -268,34 +268,37 @@ $topbar_banner_small = uploaded_asset(get_setting('topbar_banner_small')) ?? $to
     </div>
 
     <!-- Search visible on screens < 992px wide (lg breakpoint). It is hidden inside collapse by default -->
-    <div class="collapse position-absolute top-100 z-2 w-100 bg-lighr d-lg-none me-2" id="searchBar">
-        <div class="container position-relative my-3" data-bs-theme="light">
-            <form action="{{ route('search') }}" method="GET" class="position-relative">
-                
-                <!-- Left icon -->
-                <i class="ci-search position-absolute top-50 start-0 translate-middle-y ms-3 fs-lg text-muted z-2"></i>
-        
-                <input
-                    type="search"
-                    name="q"
-                    class="form-control form-icon-start border rounded-pill pe-5"
-                    placeholder="Search the products"
-                    required
-                />
-        
-                <!-- Right submit button -->
-                <button
-                    type="submit"
-                    class="position-absolute top-50 end-0 translate-middle-y me-3 border-0 bg-transparent z-2"
-                >
-                    Search
-                </button>
-        
-            </form>
+   <!-- Search visible on screens < 992px -->
+<div class="collapse position-absolute top-100 z-2 w-100 bg-lighr d-lg-none me-2" id="searchBar">
+    <div class="container position-relative my-3" data-bs-theme="light">
+
+        <!-- NO action / NO submit -->
+        <div class="position-relative">
+
+            <!-- Left icon -->
+            <i class="ci-search position-absolute top-50 start-0 translate-middle-y ms-3 fs-lg text-muted z-2"></i>
+
+            <input
+                type="search"
+                id="mobileSearchInput"
+                class="form-control form-icon-start border rounded-pill pe-5"
+                placeholder="Search the products"
+                autocomplete="off"
+            />
+
+            <!-- Right icon (kept for UI only) -->
+           
+
+            <!-- MOBILE DROPDOWN -->
+            <div
+                id="mobileSearchDropdown"
+                class="position-absolute w-100 bg-white border rounded mt-2 d-none"
+                style="z-index:1000; max-height:350px; overflow-y:auto;">
+            </div>
+
         </div>
-        
-        
     </div>
+</div>
 
     <!-- Main navigation that turns into offcanvas on screens < 992px wide (lg breakpoint) -->
     <div class="collapse navbar-stuck-hide" id="stuckNav">
