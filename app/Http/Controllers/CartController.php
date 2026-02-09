@@ -91,6 +91,8 @@ class CartController extends Controller
             'cart_count' => count($carts),
             'modal_view' => view('frontend.partials.cart.removeAuctionProductFromCart')->render(),
             'nav_cart_view' => view('frontend.partials.cart.cart')->render(),
+            'cart_canvas_view' => view('frontend.components.offcanvas', compact('carts'))->render(),
+
         ];
     }
 
