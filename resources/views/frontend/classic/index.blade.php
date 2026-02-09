@@ -469,7 +469,7 @@ $flash_deal = get_featured_flash_deal();
         $product_url = route('product', $product->slug);
         @endphp
         <!-- Item -->
-        <div class="col">
+        <div class="col" id="product-card-{{ $product->id }}">
             <div class="product-card animate-underline hover-effect-opacity bg-body rounded">
                 <div class="position-relative">
                     <div class="position-absolute top-0 end-0 z-2 hover-effect-target opacity-0 mt-3 me-3">
@@ -546,6 +546,12 @@ $flash_deal = get_featured_flash_deal();
                             <span class="text-dark fw-700">{{ home_base_price($product) }}</span>
                             @endif
                         </div>
+                        <form id="add-to-cart-form-{{ $product->id }}">
+                            <input type="hidden" name="id" value="{{ $product->id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <!-- Add other option inputs if needed -->
+                        </form>
+                
                         <button type="button"
                             class="product-card-button btn btn-icon btn-secondary animate-slide-end ms-2"
                             aria-label="Add to Cart" onclick="addToCart({{ $product->id }})">

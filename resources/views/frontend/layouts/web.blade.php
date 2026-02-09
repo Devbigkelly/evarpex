@@ -124,53 +124,35 @@ function checkAddToCartValidity() {
     return checked === names.size;
 }
 
-function addToCart() {
-
-    /* ---------------- AUTH CHECK (BLADE SAFE) ---------------- */
+function addToCart(productId) {
+    /* ---------------- AUTH CHECK ---------------- */
     @if (Auth::check() && Auth::user()->user_type !== 'customer')
         notify("{{ translate('Please login as a customer to add products to the cart.') }}", 'warning');
         return;
     @endif
 
-    /* ---------------- OPTION VALIDATION ---------------- */
-    if (typeof checkAddToCartValidity === 'function' && !checkAddToCartValidity()) {
-        notify("{{ translate('Please choose all the options') }}", 'warning');
+    /* ---------------- GET FORM FOR THIS PRODUCT ---------------- */
+    const form = document.getElementById(`add-to-cart-form-${productId}`);
+    if (!form) {
+        notify("{{ translate('Product form not found.') }}", 'error');
         return;
     }
 
-    /* ---------------- QUANTITY HANDLING (ALWAYS ≥ 1) ---------------- */
-    let quantity = 1;
-    const qtyInput = document.querySelector('.count-input input[type="number"]');
+    const formData = new FormData(form);
 
-    if (qtyInput) {
-        const parsedQty = parseInt(qtyInput.value, 10);
-        if (!isNaN(parsedQty) && parsedQty > 0) {
-            quantity = parsedQty;
-        }
-    }
-
-    /* ---------------- FORM DATA ---------------- */
-    const form = document.getElementById('option-choice-form');
-    const formData = form ? new FormData(form) : new FormData();
-
-    // 🔒 FORCE quantity (overrides anything)
-    formData.set('quantity', quantity);
-
-    /* ---------------- SHOW MODAL (CARTZILLA SAFE) ---------------- */
+    /* ---------------- SHOW MODAL ---------------- */
     const modalEl = document.getElementById('addToCart');
     if (modalEl && window.bootstrap?.Modal) {
         try {
             bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true }).show();
-        } catch (e) {
-            console.warn('Modal init error:', e);
-        }
+        } catch (e) { console.warn(e); }
     }
 
     /* ---------------- SHOW LOADER ---------------- */
     const loader = document.querySelector('.c-preloader');
     if (loader) loader.style.display = 'block';
 
-    /* ---------------- FETCH REQUEST ---------------- */
+    /* ---------------- POST REQUEST ---------------- */
     fetch("{{ route('cart.addToCart') }}", {
         method: 'POST',
         headers: {
@@ -181,62 +163,42 @@ function addToCart() {
     })
     .then(async res => {
         const contentType = res.headers.get('content-type') || '';
-
         if (!res.ok) throw res;
-
         if (!contentType.includes('application/json')) {
             const text = await res.text();
             console.error('Non-JSON response:', text);
             throw new Error('Invalid server response');
         }
-
         return res.json();
     })
     .then(data => {
-
         if (data.error) {
             notify(data.message || "{{ translate('Something went wrong') }}", 'warning');
             return;
         }
-
         if (data.modal_view) {
             const modalBody = document.getElementById('addToCart-modal-body');
             if (modalBody) modalBody.innerHTML = data.modal_view;
         }
-
-        const modalSize = document.getElementById('modal-size');
-        if (modalSize) modalSize.classList.remove('modal-lg');
-
         if (typeof updateNavCart === 'function') {
             updateNavCart(data.nav_cart_view, data.cart_count);
         }
-
         notify("{{ translate('Product added to cart successfully') }}", 'success');
     })
     .catch(async err => {
-
         if (err instanceof Response) {
             const text = await err.text();
             console.error('Server error:', text);
-
             if ([401, 419].includes(err.status)) {
                 notify("{{ translate('Session expired. Please login again.') }}", 'warning');
                 return;
             }
         }
-
         notify("{{ translate('Something went wrong. Please try again.') }}", 'error');
     })
     .finally(() => {
         if (loader) loader.style.display = 'none';
     });
-
-    /* ---------------- FACEBOOK PIXEL ---------------- */
-    @if (get_setting('facebook_pixel') == 1)
-        if (typeof fbq === 'function') {
-            fbq('track', 'AddToCart', { content_type: 'product' });
-        }
-    @endif
 }
 
 $('#search').on('keyup focus', function () {
